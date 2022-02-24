@@ -8,9 +8,9 @@ const getProviderOptions = () => {
         options: {
           //infuraId: process.env.REACT_APP_INFURA_ID
           rpc: {
-            56: "https://bsc-dataseed.binance.org",
-            97: "https://data-seed-prebsc-1-s1.binance.org:8545/"
-         }
+            4: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+            1: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
+          }
         }
       }
     }

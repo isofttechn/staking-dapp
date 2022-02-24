@@ -49,8 +49,8 @@ const getProviderOptions = () => {
         options: {
           //infuraId: '1225dbb4ccc94c219acf51ef31fa42de'
           rpc: {
-            56: "https://bsc-dataseed.binance.org",
-            97: "https://data-seed-prebsc-1-s1.binance.org:8545/"
+            4: "https://rinkeby.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
+            1: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161"
           }
         }
       },
@@ -75,8 +75,8 @@ export const connectWallet = () => {
             });
     
             const provider = await web3Modal.connect();
-            const stakingContractAddress = '0x57906c93964bB136d84c2bC90E97062016359201';
-            const TokencontractAddress = '0xBeAa541c685A3ec61e7E5Ed0749db1c2795b93e4';
+            const stakingContractAddress = '0x44085c0272726fD5FA7303689A745b194C595bA3';
+            const TokencontractAddress = '0x9063EB6acA8F606E5365649a1642A7Eb8c79D613';
             const pairContractAddress = '0xbe9efe8D0eF44036Ca838568787e03b7c3762320';
     
             await subscribeProvider(provider, dispatch);
@@ -97,7 +97,7 @@ export const connectWallet = () => {
             const address = accounts[0];
         
             const instance = new web3.eth.Contract(
-              contract.output.abi,
+              contract,
               stakingContractAddress
             );
             const tokenInstance = new web3.eth.Contract(
@@ -110,8 +110,8 @@ export const connectWallet = () => {
               pairContractAddress
             )
 
-            if(window.ethereum && window.ethereum.networkVersion !== '97') {
-              await addNetwork(97);
+            if(window.ethereum && window.ethereum.networkVersion !== '4') {
+              await addNetwork(4);
             }
             dispatch(
               connectSuccess({
@@ -155,11 +155,11 @@ const subscribeProvider = async(provider) => {
   });
 
   provider.on("networkChanged", async (networkId) => {
-    if(networkId !== '97') {
+    if(networkId !== '4') {
       console.log(networkId);
       await store.dispatch(connectFailed('Please switch to Binance mainnet'));
       //alert('Please switch to binance network!')
-      addNetwork(97);
+      addNetwork(4);
     } else {
       store.dispatch(connectWallet());
     }
@@ -170,35 +170,19 @@ export async function addNetwork(id) {
 let networkData;
 switch (id) {
   //bsctestnet
-  case 97:
+  case 4:
     networkData = [
       {
-        chainId: "0x61",
-        chainName: "BSCTESTNET",
-        rpcUrls: ["https://data-seed-prebsc-1-s1.binance.org:8545"],
-        nativeCurrency: {
-          name: "BINANCE COIN",
-          symbol: "BNB",
-          decimals: 18,
-        },
-        blockExplorerUrls: ["https://testnet.bscscan.com/"],
+        chainId: "0x4",
       },
     ];
 
     break;
   //bscmainet
-  case 56:
+  case 1:
     networkData = [
       {
-        chainId: "0x38",
-        chainName: "BSCMAINET",
-        rpcUrls: ["https://bsc-dataseed1.binance.org"],
-        nativeCurrency: {
-          name: "BINANCE COIN",
-          symbol: "BNB",
-          decimals: 18,
-        },
-        blockExplorerUrls: ["https://testnet.bscscan.com/"],
+        chainId: "0x1",
       },
     ];
     break;
@@ -206,7 +190,7 @@ switch (id) {
     break;
 }
 return window.ethereum.request({
-  method: "wallet_addEthereumChain",
+  method: "wallet_switchEthereumChain",
   params: networkData,
 });
 }
@@ -215,10 +199,10 @@ return window.ethereum.request({
 if(window.ethereum) {
   window.ethereum.on('networkChanged', async function(networkId){
     console.log('network change', networkId);
-    if(networkId !== '97') {
+    if(networkId !== '4') {
       console.log(networkId);
       await store.dispatch(connectFailed('Please switch to Binance mainnet'));
-      addNetwork(97);
+      addNetwork(4);
       //alert('Please switch to binance network!')
     } else {
       store.dispatch(connectWallet());

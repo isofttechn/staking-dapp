@@ -91,7 +91,7 @@ export class Home extends Component {
 
   checkAllowance = async() => {
     const {web3, token, address} = this.props.wallet;
-    const stakingContractAddress = '0x57906c93964bB136d84c2bC90E97062016359201';
+    const stakingContractAddress = '0x44085c0272726fD5FA7303689A745b194C595bA3';
     const allowance = await token.methods.allowance(address, stakingContractAddress).call();
     const allowanceFromWei = parseInt(web3.utils.fromWei(allowance, 'ether'));
     this.setState({allowance: allowanceFromWei}, () => {
@@ -147,7 +147,7 @@ export class Home extends Component {
   approval = async () => {
     const {web3, token, address} = this.props.wallet;
     const tokenAmount = web3.utils.toWei('99999999', 'ether');
-    const stakingContractAddress = '0x57906c93964bB136d84c2bC90E97062016359201';
+    const stakingContractAddress = '0x44085c0272726fD5FA7303689A745b194C595bA3';
     const approval = await token.methods.approve(stakingContractAddress, tokenAmount).send({from: address});
     console.log(approval);
     this.setState({isApproved: true});
@@ -188,12 +188,13 @@ export class Home extends Component {
   }
 
   calculateAPR = (days) => {
-    let currentAPR = (days / 365) * 100;
-    currentAPR = currentAPR.toFixed(2);
+    let currentAPR = (days * days * 0.0005) + 50;
+    currentAPR = currentAPR.toFixed(3);
     return currentAPR;
   }
 
   calculateReward = (amount) => {
+    amount = (amount * this.state.currentAPR)/100;
     let currentestimatedreward = ((amount / 365) * this.state.yearsValue);
     currentestimatedreward = Math.floor(currentestimatedreward);
     this.setState({ currentestimatedreward: currentestimatedreward }, () => {
@@ -373,7 +374,7 @@ export class Home extends Component {
                           onChange={(e) => {
                             this.setState({ yearsValue: e.target.value }, () => this.calculateReward(this.state.stakeValue));
                             let currentAPR = this.calculateAPR(e.target.value)
-                            this.setState({ currentAPR });
+                            this.setState({ currentAPR }, this.calculateReward(this.state.stakeValue));
                           }}
                         />
                         <span>days</span>
