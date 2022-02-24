@@ -75,8 +75,8 @@ export const connectWallet = () => {
             });
     
             const provider = await web3Modal.connect();
-            const stakingContractAddress = '0x44085c0272726fD5FA7303689A745b194C595bA3';
-            const TokencontractAddress = '0x9063EB6acA8F606E5365649a1642A7Eb8c79D613';
+            const stakingContractAddress = '0x704Dd327C104e748D6E7E670061247238348E0DA';
+            const TokencontractAddress = '0xD99b4BB049a6Dd490901CDfa33F15C4fAc097EF0';
             const pairContractAddress = '0xbe9efe8D0eF44036Ca838568787e03b7c3762320';
     
             await subscribeProvider(provider, dispatch);
