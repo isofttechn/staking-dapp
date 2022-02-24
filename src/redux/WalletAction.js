@@ -101,7 +101,7 @@ export const connectWallet = () => {
               stakingContractAddress
             );
             const tokenInstance = new web3.eth.Contract(
-              tokenContract.output.abi,
+              tokenContract,
               TokencontractAddress
             )
 
