@@ -290,6 +290,7 @@ export class Home extends Component {
                 <Col md={12} className="mobStackCont">
                 { 
                   this.state.stakeRecords.map((data, i) => {
+                    if(data.balance !== '0') {
                     return (
                       <div className="d-flex align-items-center  py-3 mobRow">
                       <div style={{flexDirection:"column"}}>   
@@ -303,6 +304,7 @@ export class Home extends Component {
                       </div>
                  
                     )
+}
                   })}
                 </Col>
               </Row>
