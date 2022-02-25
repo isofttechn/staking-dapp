@@ -91,7 +91,7 @@ export class Home extends Component {
 
   checkAllowance = async() => {
     const {web3, token, address} = this.props.wallet;
-    const stakingContractAddress = '0x44085c0272726fD5FA7303689A745b194C595bA3';
+    const stakingContractAddress = '0x704Dd327C104e748D6E7E670061247238348E0DA';
     const allowance = await token.methods.allowance(address, stakingContractAddress).call();
     const allowanceFromWei = parseInt(web3.utils.fromWei(allowance, 'ether'));
     this.setState({allowance: allowanceFromWei}, () => {
@@ -147,7 +147,7 @@ export class Home extends Component {
   approval = async () => {
     const {web3, token, address} = this.props.wallet;
     const tokenAmount = web3.utils.toWei('99999999', 'ether');
-    const stakingContractAddress = '0x44085c0272726fD5FA7303689A745b194C595bA3';
+    const stakingContractAddress = '0x704Dd327C104e748D6E7E670061247238348E0DA';
     const approval = await token.methods.approve(stakingContractAddress, tokenAmount).send({from: address});
     console.log(approval);
     this.setState({isApproved: true});
