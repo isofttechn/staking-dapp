@@ -34,6 +34,7 @@ const initialState = {
     errorMsg: null,
     pair: null,
     token: null,
+    wallet: null,
     web3Modal
 }
 
@@ -53,6 +54,7 @@ const walletConnectReducer = (state = initialState, action) => {
                 web3: action.payload.web3,
                 token: action.payload.token,
                 pair: action.payload.pair,
+                wallet: action.payload.wallet,
                 provider: action.payload.provider,
                 connected: action.payload.connected
             };

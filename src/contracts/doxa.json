@@ -1,0 +1,782 @@
+{
+	"compiler": {
+		"version": "0.8.7+commit.e28d00a7"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "admin",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "_token",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "_usdt",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "_wallet",
+						"type": "address"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "txId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "paymentType",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "mailID",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "isPaidOut",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "eventId",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "amount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "payer",
+								"type": "string"
+							}
+						],
+						"indexed": false,
+						"internalType": "struct DoxaPay.PaymentInfo",
+						"name": "info",
+						"type": "tuple"
+					}
+				],
+				"name": "AppWalletPayment",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "txId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "paymentType",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "mailID",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "isPaidOut",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "eventId",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "amount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "payer",
+								"type": "string"
+							}
+						],
+						"indexed": false,
+						"internalType": "struct DoxaPay.PaymentInfo",
+						"name": "info",
+						"type": "tuple"
+					}
+				],
+				"name": "DoxaPayment",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "txId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "paymentType",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "mailID",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "isPaidOut",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "eventId",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "amount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "payer",
+								"type": "string"
+							}
+						],
+						"indexed": false,
+						"internalType": "struct DoxaPay.PaymentInfo",
+						"name": "info",
+						"type": "tuple"
+					}
+				],
+				"name": "ETHPayment",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "previousOwner",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "newOwner",
+						"type": "address"
+					}
+				],
+				"name": "OwnershipTransferred",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "Received",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "account",
+						"type": "address"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "txId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "paymentType",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "mailID",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "isPaidOut",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "eventId",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "amount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "payer",
+								"type": "string"
+							}
+						],
+						"indexed": false,
+						"internalType": "struct DoxaPay.PaymentInfo",
+						"name": "info",
+						"type": "tuple"
+					}
+				],
+				"name": "Refund",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "txId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "paymentType",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "mailID",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "isPaidOut",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "eventId",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "amount",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string",
+								"name": "payer",
+								"type": "string"
+							}
+						],
+						"indexed": false,
+						"internalType": "struct DoxaPay.PaymentInfo",
+						"name": "info",
+						"type": "tuple"
+					}
+				],
+				"name": "USDTPayment",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "PaymentRecords",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "txId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "paymentType",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "mailID",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "timestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "isPaidOut",
+						"type": "bool"
+					},
+					{
+						"internalType": "string",
+						"name": "eventId",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "payer",
+						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "txID",
+						"type": "uint256"
+					}
+				],
+				"name": "claimEventAmount",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "contractETHBalance",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "",
+						"type": "string"
+					}
+				],
+				"name": "eventHostRecords",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "owner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "id",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "eventId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "payer",
+						"type": "string"
+					}
+				],
+				"name": "payDoxa",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "id",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "eventId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "payer",
+						"type": "string"
+					}
+				],
+				"name": "payETH",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "id",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "eventId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "payer",
+						"type": "string"
+					}
+				],
+				"name": "payUSDT",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "id",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "eventId",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "payer",
+						"type": "string"
+					}
+				],
+				"name": "payUsingAppWallet",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "renounceOwnership",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_addr",
+						"type": "address"
+					}
+				],
+				"name": "setTokenAddress",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_addr",
+						"type": "address"
+					}
+				],
+				"name": "setUsdtAddress",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_addr",
+						"type": "address"
+					}
+				],
+				"name": "setWalletInstance",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "account",
+						"type": "address"
+					}
+				],
+				"name": "totalNoOfPayments",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newOwner",
+						"type": "address"
+					}
+				],
+				"name": "transferOwnership",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_addr",
+						"type": "address"
+					}
+				],
+				"name": "walletBalanceOf",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"stateMutability": "payable",
+				"type": "receive"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {
+				"owner()": {
+					"details": "Returns the address of the current owner."
+				},
+				"renounceOwnership()": {
+					"details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner."
+				},
+				"transferOwnership(address)": {
+					"details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+				}
+			},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"gist-71572af562f01852a1e328dba89471fe/doxa/doxa-pay.sol": "DoxaPay"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"gist-71572af562f01852a1e328dba89471fe/doxa/Context.sol": {
+			"keccak256": "0xf20dbf8480e35c5bb905df6d9e83adff23957bb94cbbe9e35500cbba9ab18ad3",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://c39c6c7e6b3d89c4f73c4127820a387e3889d31500f139e95868403fcd735ec6",
+				"dweb:/ipfs/QmVwwV86tX9YFwpoAfP98TvF19KvSmkFbwTqwLcuSYKCTM"
+			]
+		},
+		"gist-71572af562f01852a1e328dba89471fe/doxa/IERC20.sol": {
+			"keccak256": "0x027b891937d20ccf213fdb9c31531574256de774bda99d3a70ecef6e1913ed2a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://087318b21c528119f649899f5b5580566dd8d7b0303d4904bd0e8580c3545f14",
+				"dweb:/ipfs/Qmbn5Mj7aUn8hJuQ8VrQjjEXRsXyJKykgnjR9p4C3nfLtL"
+			]
+		},
+		"gist-71572af562f01852a1e328dba89471fe/doxa/Ownable.sol": {
+			"keccak256": "0xb99282e7b47a1d24b22d1b420ba96ee1d444bd306f2513768a1216853aedb81c",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://2e6a667aa5ec4a8a7c31eb087b18ce0aeb7de93601f876e8be1734c2c92fe1be",
+				"dweb:/ipfs/QmY1WCiK1953CoV9JGYbpstM1ye2hy7bjhaYUnSVmwxYGb"
+			]
+		},
+		"gist-71572af562f01852a1e328dba89471fe/doxa/SafeMath.sol": {
+			"keccak256": "0x8666f020bd8fc9dc14f07e2ebc52b5f236ab4cdde7c77679b08cb2f94730043b",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://163776cbf565c722232393aa2d62cbe8a2ffb5805986abf4906c00e1e07450a6",
+				"dweb:/ipfs/QmPZoN9T3cb6o8bGhjBPZcz7im8T8DWhpr3tjLwhJJHx9N"
+			]
+		},
+		"gist-71572af562f01852a1e328dba89471fe/doxa/doxa-pay.sol": {
+			"keccak256": "0xd174cde99e3ad19332e17944c38a39f12102c7b62bcfd2f15cb4435c1a717724",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://7332ecca61a03ad614a314b6cb1b66cee96f46dd5bd60b0a8ba53d1c9b1062e9",
+				"dweb:/ipfs/QmSfTv4rH9ah8ZubryyLiHhcBftXG5em3Ni2MLokUxstHT"
+			]
+		}
+	},
+	"version": 1
+}

@@ -2,10 +2,16 @@ import React, { Component } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import Carousel from "react-bootstrap/Carousel";
 import "./scss/home.css";
+import "./scss/swap.css";
 import "rc-slider/assets/index.css";
 import Slider, { SliderTooltip } from "rc-slider";
 import { connect } from "react-redux";
 import { connectWallet } from '../../redux/WalletAction';
+import bnb from "../../assets/eth.png";
+import transfer from "../../assets/transfer.png";
+import buyLoader from "../../assets/doxa-ico-loader.gif";
+
+import miniLogo from "../../assets/logo.png";
 import stakingLogo from "../../assets/staking.png";
 import claimImg from "../../assets/send.png";
 import axios from 'axios';
@@ -23,6 +29,11 @@ export class Home extends Component {
       allowance: 0,
       rewardUsdtValue: 0,
       stakeUsdtValue: 0,
+      inputValue: '0',
+      doxaValue: 0,
+      stakeType: false,
+      walletBalance: 0,
+      metaBalance: 0,
       price: 0,
       //priceFn: this.getPrice(),
       arrData: [
@@ -45,6 +56,7 @@ export class Home extends Component {
       ],
       currentAPR: 0,
       currentestimatedreward:0,
+      showDiv: false
     };
   }
   async componentDidMount() {
@@ -60,10 +72,12 @@ export class Home extends Component {
           console.log('in promise call back');
           await this.getStakeRecords();
           await this.checkAllowance();
+          await this.getTokenBalance();
         }
       });
     }
   }
+
 
   getPrice = async() => {
 
@@ -82,6 +96,43 @@ export class Home extends Component {
     console.log(price);
   }
 
+  buyToken = async () => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const id = queryParams.get('email');
+    let inputValue = parseFloat(this.state.inputValue);
+    console.log(this.props.wallet);
+    console.log(inputValue)
+    if (inputValue >= 0.00001 && inputValue <= 10) {
+      const { web3, doxa, wallet, address } = this.props.wallet;
+      const value = this.state.inputValue.toString();
+      const buyValue = web3.utils.toWei(value, 'ether');
+      const tokenPrice = web3.utils.toWei('0.00001', 'ether');
+      const totalTokens = (web3.utils.toBN(buyValue).div(web3.utils.toBN(tokenPrice))).toString();
+      console.log(totalTokens);
+
+      try {
+        this.setState({ loading: true })
+        console.log(wallet);
+        const res = await wallet.methods.swapEthToDoxa('email').send({ from: address, value: buyValue });
+
+        console.log(res);
+        this.setState({ loading: false })
+
+      } catch (err) {
+        this.setState({ loading: false })
+
+        if (err.message) {
+          alert(err.message)
+        } else {
+          alert("Something went wrong!")
+        }
+      }
+    } else {
+      alert("ETH should be between 0.00001 and 10");
+      return
+    }
+    }
+
   async componentDidUpdate(prevProps, prevState) {
     const {web3} = this.props.wallet;
     if(prevProps.wallet.connected !== this.props.wallet.connected ) {
@@ -89,9 +140,22 @@ export class Home extends Component {
     }
   }
 
+  updateInputValue = async (e) => {
+    // const {web3} = this.props.wallet;
+    // const BN = web3.utils.BN;
+    let totalTokens;
+    if (e.target.value != '') {
+      totalTokens = parseFloat(e.target.value) / 0.00001;
+    }
+    this.setState({
+      inputValue: e.target.value,
+      doxaValue: totalTokens
+    });
+  }
+  
   checkAllowance = async() => {
     const {web3, token, address} = this.props.wallet;
-    const stakingContractAddress = '0x44085c0272726fD5FA7303689A745b194C595bA3';
+    const stakingContractAddress = '0xA40a7d03911B951b73036549A82Ff293413689Fa';
     const allowance = await token.methods.allowance(address, stakingContractAddress).call();
     const allowanceFromWei = parseInt(web3.utils.fromWei(allowance, 'ether'));
     this.setState({allowance: allowanceFromWei}, () => {
@@ -103,6 +167,15 @@ export class Home extends Component {
         this.setState({isApproved: true});
       }
     });
+  }
+
+  getTokenBalance = async() => {
+    const {web3, address, token, wallet} = this.props.wallet;
+    const balance = web3.utils.fromWei(await wallet.methods.walletBalanceOf(address).call(), 'ether');
+    console.log(parseFloat(balance).toFixed(2));
+    this.setState({walletBalance: parseFloat(balance).toFixed(2)})
+    const balanceMeta = web3.utils.fromWei(await token.methods.balanceOf(address).call(), 'ether');
+    this.setState({metaBalance: parseFloat(balanceMeta).toFixed(2)});
   }
 
   getStakeRecords = async() => {
@@ -119,6 +192,10 @@ export class Home extends Component {
         let earned = await staking.methods.earned(address, i).call();
         data.rewardEarned = web3.utils.fromWei(earned, 'ether').split('.')[0];
         data.apr = this.calculateAPR(parseInt(data.lockingPeriod));
+
+        const time = Math.floor(Math.floor(data.maxTime - (Date.now() / 1000)) / (60));
+        data.timeleft = time < -1 ? -1 : time;
+        console.log(data.timeleft);
       }));
       if(res.length > 0) {
         this.setState({stakeRecords: res});
@@ -131,12 +208,21 @@ export class Home extends Component {
   }
 
   stakeAZO = async () => {
+    let type;
+    console.log(this.state.stakeType);
+    if(this.state.stakeType) {
+      type = 1;
+    } else type = 0;
+
     if(this.state.stakeValue > 0 && this.state.yearsValue > 0) {
       const {web3, staking, token, address} = this.props.wallet;
       const tokenAmount = web3.utils.toWei(this.state.stakeValue.toString(), 'ether');
-      const stake = await staking.methods.stake(tokenAmount, this.state.yearsValue).send({from: address});
+      const stake = await staking.methods.stake(tokenAmount, this.state.yearsValue, type).send({from: address});
       console.log(stake);
-      await this.getStakeRecords();
+      this.getStakeRecords();
+      if(this.state.stakeType) {
+        this.getTokenBalance();
+      }
 
     } else {
       alert('Amount of AZO or days should be more than 0!')
@@ -147,10 +233,11 @@ export class Home extends Component {
   approval = async () => {
     const {web3, token, address} = this.props.wallet;
     const tokenAmount = web3.utils.toWei('99999999', 'ether');
-    const stakingContractAddress = '0x44085c0272726fD5FA7303689A745b194C595bA3';
+    const stakingContractAddress = '0xA40a7d03911B951b73036549A82Ff293413689Fa';
     const approval = await token.methods.approve(stakingContractAddress, tokenAmount).send({from: address});
     console.log(approval);
     this.setState({isApproved: true});
+    await this.checkAllowance();
   }
 
   claimReward = async (record) => {
@@ -162,7 +249,8 @@ export class Home extends Component {
       const claimReward = await staking.methods.getReward(record).send({from: address});
       console.log(claimReward);
     }
-    await this.getStakeRecords();
+    this.getStakeRecords();
+    this.getTokenBalance();
   }
 
   unstake = async(record) => {
@@ -173,7 +261,13 @@ export class Home extends Component {
       const unstake = await staking.methods.unstake(record).send({from: address});
       console.log(unstake);
     }
-    await this.getStakeRecords();
+    this.getStakeRecords();
+    this.getTokenBalance();
+  }
+
+  canUnstake = (data) => {
+    console.log(data.maxTime < (Date.now()/1000));
+    return !(data.maxTime < (Date.now()/1000));
   }
 
   isTimeEnded = async(record) => {
@@ -213,6 +307,7 @@ export class Home extends Component {
       <div style={{backgroundColor:"#F5D393"}}>
         <Container fluid className="mainCont">
           <Row>
+
             <Col xl={6} lg={6} md={6} xs={12} className="lhs">
               <h1>AZO STAKING</h1>
               <h2>Stake on AZO</h2>
@@ -220,51 +315,101 @@ export class Home extends Component {
                 Earn rewards by staking your AZO to help secure the network. Choose your staking preference and start earning profit with just a few clicks!
               </p>
 
-              <button className="btn-btn">Buy AZO</button>
-              <div className="mtop-10">
-                <div className="gridMain deskCont">
-                  {this.state.arrData.map((data) => (
-                    <div className="gridCont">
-                      <h3>{data.title}</h3>
-                      <p>{data.desc}</p>
+              <button className="btn-btn" onClick={()=>{this.setState({showDiv: !this.state.showDiv})}}>SWAP</button>
+              {
+                this.state.showDiv ?
+                <>
+                {/* swap */}
+                
+                <div className="bs-container h-75">
+                <div className="bs-main1">
+                  <div className="gapbalance">
+                     <b className="balancebold"> {this.state.walletBalance} AZO</b><br />
+                       <p className="pbalance"> Available Balance </p>
+                  </div>
+                </div>
+                <div className="bs-main">
+                  <h2>swap your crypto</h2>
+                  <div className="bs-input">
+                    <div className="inpt-cont center mb-3">
+                      <label>Enter ETH</label>
+                      <input type="number" value={this.state.inputValue} onChange={e => this.updateInputValue(e)} />
                     </div>
-                  ))}
+                    <div className="img-cont">
+                      <img src={bnb} alt="bnb" />
+                      <p>ETH</p>
+                    </div>
+                  </div>
+                  {/* image */}
+                  <img src={transfer} className="transfer" alt="transfer" />
+                  <div className="bs-input">
+                    <div className="inpt-cont center">
+                      <p>{this.state.doxaValue}</p>
+                    </div>
+                    <div className="img-cont">
+                      <img src={miniLogo} alt="bnb" />
+                      <p>DOXAZO</p>
+                    </div>
+                  </div>
+                  {/* btn */}
+                  <button className="bs-btn" disabled={this.state.loading} onClick={() => this.props.wallet.connected ? this.buyToken() : this.connectToWallet()}>{this.props.wallet.connected ? this.state.loading ? 
+                    <span>Processing <img src={buyLoader}></img></span>
+                  : 'Buy' : 'PROCEED TO SWAP'}</button>
                 </div>
-              </div>
-              <div className="mobCont">
-                <div className="numberCont">
-                  {this.state.arrData.map((data, index) => (
-                    <p
-                      style={{
-                        backgroundColor:
-                          this.state.currindex === index
-                            ? "#002365"
-                            : "#e2e2e2",
-                        color:
-                          this.state.currindex === index ? "#fff" : "#2b2b2b",
-                      }}
-                    >
-                      {index + 1}
-                    </p>
-                  ))}
                 </div>
-                <Carousel
-                  activeIndex={this.state.currindex}
-                  onSelect={(e) => this.handleSelect(e)}
-                  variant="dark"
-                  controls={false}
-                >
-                  {this.state.arrData.map((data) => (
-                    <Carousel.Item>
-                      <div className="mobSlideCont">
+                
+
+                {/* swap end */}
+                </>
+                :
+                <>
+                <div className="mtop-10">
+                  <div className="gridMain deskCont">
+                    {this.state.arrData.map((data) => (
+                      <div className="gridCont">
                         <h3>{data.title}</h3>
                         <p>{data.desc}</p>
                       </div>
-                    </Carousel.Item>
-                  ))}
-                </Carousel>
-              </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mobCont">
+                  <div className="numberCont">
+                    {this.state.arrData.map((data, index) => (
+                      <p
+                        style={{
+                          backgroundColor:
+                            this.state.currindex === index
+                              ? "#002365"
+                              : "#e2e2e2",
+                          color:
+                            this.state.currindex === index ? "#fff" : "#2b2b2b",
+                        }}
+                      >
+                        {index + 1}
+                      </p>
+                    ))}
+                  </div>
+                  <Carousel
+                    activeIndex={this.state.currindex}
+                    onSelect={(e) => this.handleSelect(e)}
+                    variant="dark"
+                    controls={false}
+                  >
+                    {this.state.arrData.map((data) => (
+                      <Carousel.Item>
+                        <div className="mobSlideCont">
+                          <h3>{data.title}</h3>
+                          <p>{data.desc}</p>
+                        </div>
+                      </Carousel.Item>
+                    ))}
+                  </Carousel>
+                </div>
+                </>
+              }
             </Col>
+            
             <Col xl={6} lg={6} md={6} xs={12} className="rhs">
               <h6 className="text-center">AZO BOUNTY</h6>
               <Row className="stackMain" style={{backgroundColor:"#ffffff"}}>
@@ -275,8 +420,8 @@ export class Home extends Component {
                       return (
                         <div className="grid-row " >
                           <div style={{flexDirection:"column"}}>
-                            <p style={{float:"left"}}>{data.balance} AZO at <b>{data.apr}% APR </b> for <span>{data.lockingPeriod} days</span></p> <br></br> 
-                            <button style={{float:"left"}} className="grid-btn" onClick={() => this.unstake(i)}>unstake</button>
+                            <p style={{float:"left"}}>{data.balance} AZO at <b>{data.apr}% APR </b> for <span>{data.lockingPeriod} days</span>({data.timeleft + 1} left)</p> <br></br> 
+                            <button style={{float:"left"}} className="grid-btn" style={{backgroundColor: !this.canUnstake(data)  ? '#002365' : '#e2e2e2'}} disabled={this.canUnstake(data)} onClick={() => this.unstake(i)}>unstake</button>
                           </div>
                           <div style={{flexDirection:"column"}}>
                             <p style={{float:"left"}}>Reward :<b>{data.rewardEarned}</b> AZO </p> <br></br>
@@ -290,19 +435,21 @@ export class Home extends Component {
                 <Col md={12} className="mobStackCont">
                 { 
                   this.state.stakeRecords.map((data, i) => {
+                    if(data.balance !== '0') {
                     return (
                       <div className="d-flex align-items-center  py-3 mobRow">
                       <div style={{flexDirection:"column"}}>   
-                        <p style={{float:"left"}}>{data.balance} AZO at <b>{data.apr}% APR </b> <br></br>for <span>{data.lockingPeriod} days</span></p>
+                        <p style={{float:"left"}}>{data.balance} AZO at <b>{data.apr}% APR </b> <br></br>for <span>{data.lockingPeriod} days</span>({data.timeleft + 1} left)</p>
                         <p style={{float:"left"}}>Reward :<b>{data.rewardEarned}</b> AZO </p>
                       </div> 
                       <div style={{flexDirection:"column",marginTop:"20px"}}>   
-                        <button style={{float:"left"}} className="grid-btn" onClick={() => this.unstake(i)}>unstake</button>
+                        <button style={{float:"left"}} className="grid-btn" style={{backgroundColor: !this.canUnstake(data)  ? '#002365' : '#e2e2e2'}} disabled={this.canUnstake(data)} onClick={() => this.unstake(i)}>unstake</button>
                         <button style={{float:"left"}}className="grid-btn" onClick={() => this.claimReward(i)}>claim</button>
                       </div> 
                       </div>
                  
                     )
+}
                   })}
                 </Col>
               </Row>
@@ -410,6 +557,16 @@ export class Home extends Component {
                         </p>
                       </div>
                     </div>
+                    <div className="d-flex justify-content-between align-items-center py-3 px-5 bottomCont">
+                      
+                        <input type="radio"  name="btnradio" id="btnradio1" autoComplete="off" checked={this.state.stakeType === true} onChange={() => this.setState({stakeType: true})}/>
+                        <label  htmlFor="btnradio1">Internal Wallet <br /> {this.state.walletBalance} AZO</label>
+
+                        <input type="radio" name="btnradio" id="btnradio2" autoComplete="off" checked={this.state.stakeType === false} onChange={() => this.setState({stakeType: false})}/>
+                        <label  htmlFor="btnradio2">External Wallet <br /> {this.state.metaBalance} AZO</label>
+
+                    </div>
+
                     <div className="d-block d-md-flex bottom-btn-cont">
                       {!this.state.isApproved && <button className="btn-btn stake-btn"  onClick={() => this.props.wallet.connected ? this.approval() : alert('Connect to wallet!')}>Approve AZO</button>}
                       <button className="btn-btn stake-btn" style={{backgroundColor:this.state.isApproved ? '#002365' : '#e2e2e2'}} disabled={!this.state.isApproved} onClick={() => this.state.isApproved ? this.stakeAZO(): alert('Approve tokens before staking!')}>STAKE AZO</button>

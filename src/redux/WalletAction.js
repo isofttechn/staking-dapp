@@ -6,6 +6,7 @@ import WalletConnectProvider from "@walletconnect/web3-provider";
 import contract from "../contracts/staking.json";
 import tokenContract from "../contracts/token.json";
 import pairContract from "../contracts/pair.json";
+import walletContract from "../contracts/wallet.json";
 import store from './store';
 
 
@@ -75,9 +76,12 @@ export const connectWallet = () => {
             });
     
             const provider = await web3Modal.connect();
-            const stakingContractAddress = '0x44085c0272726fD5FA7303689A745b194C595bA3';
-            const TokencontractAddress = '0x9063EB6acA8F606E5365649a1642A7Eb8c79D613';
+            const stakingContractAddress = '0xA40a7d03911B951b73036549A82Ff293413689Fa';
+            const internalWalletAddress = '0xdCB07173e66d31ED487660F14C46c4f0a5d334C5';
+            const TokencontractAddress = '0xD99b4BB049a6Dd490901CDfa33F15C4fAc097EF0';
             const pairContractAddress = '0xbe9efe8D0eF44036Ca838568787e03b7c3762320';
+            //const DoxaContractAddress =  process.env.REACT_APP_DOXACONTRACT_ADDRESS; 
+            
     
             await subscribeProvider(provider, dispatch);
             
@@ -101,13 +105,18 @@ export const connectWallet = () => {
               stakingContractAddress
             );
             const tokenInstance = new web3.eth.Contract(
-              tokenContract.output.abi,
+              tokenContract,
               TokencontractAddress
             )
 
             const pairInstance= new web3.eth.Contract(
               pairContract,
               pairContractAddress
+            )
+
+            const walletInstance = new web3.eth.Contract(
+              walletContract,
+              internalWalletAddress
             )
 
             if(window.ethereum && window.ethereum.networkVersion !== '4') {
@@ -120,6 +129,7 @@ export const connectWallet = () => {
                   staking: instance,
                   token: tokenInstance,
                   pair: pairInstance,
+                  wallet: walletInstance,
                   provider,
                   connected: true,
                   web3Modal
