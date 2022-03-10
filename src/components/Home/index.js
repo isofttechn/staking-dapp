@@ -43,7 +43,7 @@ export class Home extends Component {
         },
         {
           title: "Cash out your rewards",
-          desc: "With the AZO taking platform you can cash out your staking rewards although your principal is locked. So you can enjoy rewards all year round without compromising on your initial amount!",
+          desc: "With the AZO staking platform you can cash out your staking rewards although your principal is locked. So you can enjoy rewards all year round without compromising on your initial amount!",
         },
         {
           title: "Earn up to 100% APR",
