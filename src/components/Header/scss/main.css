@@ -26,8 +26,8 @@
 }
 
 .header-container .logo-container .header-logo {
-  width: 50px;
-  height: 48px;
+  width: 150px;
+  /* height: 48px; */
   cursor: pointer;
   -o-object-fit: scale-down;
      object-fit: scale-down;

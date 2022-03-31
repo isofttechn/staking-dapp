@@ -309,7 +309,7 @@ export class Home extends Component {
           <Row>
 
             <Col xl={6} lg={6} md={6} xs={12} className="lhs">
-              <h1>AZO STAKING</h1>
+              {/* <h1>AZO STAKING</h1> */}
               <h2>Stake on AZO</h2>
               <p>
                 Earn rewards by staking your AZO to help secure the network. Choose your staking preference and start earning profit with just a few clicks!
@@ -413,10 +413,13 @@ export class Home extends Component {
             <Col xl={6} lg={6} md={6} xs={12} className="rhs">
               <h6 className="text-center">AZO BOUNTY</h6>
               <Row className="stackMain" style={{backgroundColor:"#ffffff"}}>
+              
                 <Col md={12} className="stackingCont">
+                  {console.log("data",this.state.stakeRecords)}
                   { 
+                  this.state.stakeRecords.length !=0 ?
                   this.state.stakeRecords.map((data, i) => {
-                    if(data.balance !== '0') {
+                    if(data.balance != '0') {
                       return (
                         <div className="grid-row " >
                           <div style={{flexDirection:"column"}}>
@@ -430,10 +433,19 @@ export class Home extends Component {
                         </div>
                       )
                     }
-                  })}
+                  })
+                  :
+                    <div>
+                      <p className="emptybounty"> start staking to list your rewards here! </p>
+                      </div>
+                
+                  }
                 </Col>
+
                 <Col md={12} className="mobStackCont">
-                { 
+                {console.log("data",this.state.stakeRecords)}
+                  { 
+                  this.state.stakeRecords.length !=0 ? 
                   this.state.stakeRecords.map((data, i) => {
                     if(data.balance !== '0') {
                     return (
@@ -449,8 +461,15 @@ export class Home extends Component {
                       </div>
                  
                     )
-}
-                  })}
+                  }
+               
+                  })
+                  :
+                    <div>
+                      <p className="emptybounty"> start staking to list your rewards here! </p>
+                      </div>
+                
+                  }
                 </Col>
               </Row>
               <Row>
