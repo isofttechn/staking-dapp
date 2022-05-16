@@ -76,9 +76,9 @@ export const connectWallet = () => {
             });
     
             const provider = await web3Modal.connect();
-            const stakingContractAddress = '0xA40a7d03911B951b73036549A82Ff293413689Fa';
-            const internalWalletAddress = '0xdCB07173e66d31ED487660F14C46c4f0a5d334C5';
-            const TokencontractAddress = '0xD99b4BB049a6Dd490901CDfa33F15C4fAc097EF0';
+            const stakingContractAddress = process.env.REACT_APP_DOXACONTRACT_ADDRESS;
+            const internalWalletAddress = process.env.REACT_APP_WALLET_ADDRESS;
+            const TokencontractAddress = process.env.REACT_APP_TOKEN_ADDRESS;
             const pairContractAddress = '0xbe9efe8D0eF44036Ca838568787e03b7c3762320';
             //const DoxaContractAddress =  process.env.REACT_APP_DOXACONTRACT_ADDRESS; 
             

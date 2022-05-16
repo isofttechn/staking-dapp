@@ -32,6 +32,7 @@ export class Home extends Component {
       inputValue: '0',
       doxaValue: 0,
       stakeType: false,
+      stakeloading:false,
       walletBalance: 0,
       metaBalance: 0,
       price: 0,
@@ -69,7 +70,7 @@ export class Home extends Component {
     if (web3Modal.cachedProvider) {
       this.props.connectWallet().then(async() => {
         if(this.props.wallet.connected !== false) {
-          console.log('in promise call back');
+
           await this.getStakeRecords();
           await this.checkAllowance();
           await this.getTokenBalance();
@@ -89,33 +90,29 @@ export class Home extends Component {
       },
     });
 
-    console.log(res);
-
     const price = res.data.lockness.usd;
     this.setState({price}, () => this.calculateReward(this.state.stakeValue));
-    console.log(price);
+ 
   }
 
   buyToken = async () => {
     const queryParams = new URLSearchParams(window.location.search);
     const id = queryParams.get('email');
     let inputValue = parseFloat(this.state.inputValue);
-    console.log(this.props.wallet);
-    console.log(inputValue)
     if (inputValue >= 0.00001 && inputValue <= 10) {
       const { web3, doxa, wallet, address } = this.props.wallet;
       const value = this.state.inputValue.toString();
       const buyValue = web3.utils.toWei(value, 'ether');
       const tokenPrice = web3.utils.toWei('0.00001', 'ether');
       const totalTokens = (web3.utils.toBN(buyValue).div(web3.utils.toBN(tokenPrice))).toString();
-      console.log(totalTokens);
+      // console.log(totalTokens);
 
       try {
         this.setState({ loading: true })
-        console.log(wallet);
+
         const res = await wallet.methods.swapEthToDoxa('email').send({ from: address, value: buyValue });
 
-        console.log(res);
+        // console.log(res);
         this.setState({ loading: false })
 
       } catch (err) {
@@ -155,15 +152,13 @@ export class Home extends Component {
   
   checkAllowance = async() => {
     const {web3, token, address} = this.props.wallet;
-    const stakingContractAddress = '0xA40a7d03911B951b73036549A82Ff293413689Fa';
+    const stakingContractAddress = process.env.REACT_APP_DOXACONTRACT_ADDRESS;
     const allowance = await token.methods.allowance(address, stakingContractAddress).call();
     const allowanceFromWei = parseInt(web3.utils.fromWei(allowance, 'ether'));
     this.setState({allowance: allowanceFromWei}, () => {
       if(this.state.allowance < this.state.stakeValue) {
-        console.log('to be approved!')
         this.setState({isApproved: false});
       } else {
-        console.log('approved');
         this.setState({isApproved: true});
       }
     });
@@ -172,7 +167,6 @@ export class Home extends Component {
   getTokenBalance = async() => {
     const {web3, address, token, wallet} = this.props.wallet;
     const balance = web3.utils.fromWei(await wallet.methods.walletBalanceOf(address).call(), 'ether');
-    console.log(parseFloat(balance).toFixed(2));
     this.setState({walletBalance: parseFloat(balance).toFixed(2)})
     const balanceMeta = web3.utils.fromWei(await token.methods.balanceOf(address).call(), 'ether');
     this.setState({metaBalance: parseFloat(balanceMeta).toFixed(2)});
@@ -195,7 +189,7 @@ export class Home extends Component {
 
         const time = Math.floor(Math.floor(data.maxTime - (Date.now() / 1000)) / (60));
         data.timeleft = time < -1 ? -1 : time;
-        console.log(data.timeleft);
+   
       }));
       if(res.length > 0) {
         this.setState({stakeRecords: res});
@@ -208,8 +202,8 @@ export class Home extends Component {
   }
 
   stakeAZO = async () => {
+    this.setState({stakeloading:true})
     let type;
-    console.log(this.state.stakeType);
     if(this.state.stakeType) {
       type = 1;
     } else type = 0;
@@ -217,14 +211,43 @@ export class Home extends Component {
     if(this.state.stakeValue > 0 && this.state.yearsValue > 0) {
       const {web3, staking, token, address} = this.props.wallet;
       const tokenAmount = web3.utils.toWei(this.state.stakeValue.toString(), 'ether');
-      const stake = await staking.methods.stake(tokenAmount, this.state.yearsValue, type).send({from: address});
-      console.log(stake);
+      var time = Date.now()
+     // console.log("address",[address,process.env.REACT_APP_DOXACONTRACT_ADDRESS,tokenAmount,type,this.state.yearsValue,time])
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+           'Content-Type': 'application/json',
+          "Accept":"application/json" 
+        },
+        body:JSON.stringify({  
+          userAddress:address,
+          contractAddress:process.env.REACT_APP_DOXACONTRACT_ADDRESS,
+          amount:tokenAmount,
+          id:type,
+          noOfDays:this.state.yearsValue,
+          timestamp:time,
+        })
+      };
+      const response1= await fetch(process.env.REACT_APP_API_URL+'/getsignature', requestOptions)
+      const data1 = await response1.json();
+      var signaturelkn= data1.result
+      var sigtuplelkn =[address,process.env.REACT_APP_DOXACONTRACT_ADDRESS,tokenAmount,type,this.state.yearsValue,time,signaturelkn]
+      try{
+        const stake = await staking.methods.stake(tokenAmount, this.state.yearsValue, sigtuplelkn).send({from:address});
+        this.setState({stakeloading:false})
+      }catch(err){
+        console.log(err)
+        this.setState({stakeloading:false})
+      }
+      // console.log(stake);
       this.getStakeRecords();
       if(this.state.stakeType) {
         this.getTokenBalance();
+        this.setState({stakeloading:false})
       }
 
     } else {
+      this.setState({stakeloading:false})
       alert('Amount of AZO or days should be more than 0!')
     }
     
@@ -233,47 +256,117 @@ export class Home extends Component {
   approval = async () => {
     const {web3, token, address} = this.props.wallet;
     const tokenAmount = web3.utils.toWei('99999999', 'ether');
-    const stakingContractAddress = '0xA40a7d03911B951b73036549A82Ff293413689Fa';
+    const stakingContractAddress = process.env.REACT_APP_DOXACONTRACT_ADDRESS;
     const approval = await token.methods.approve(stakingContractAddress, tokenAmount).send({from: address});
-    console.log(approval);
+    // console.log(approval);
     this.setState({isApproved: true});
     await this.checkAllowance();
   }
 
-  claimReward = async (record) => {
-    const { web3, staking, address } = this.props.wallet;
-    if(await this.isTimeEnded(record)) {
-      const exit = await staking.methods.exit(record).send({from: address});
-    }
-    else {
-      const claimReward = await staking.methods.getReward(record).send({from: address});
-      console.log(claimReward);
+  claimReward = async (record,data) => {
+    //console.log("data",data)
+        const { web3, staking, address } = this.props.wallet;
+        var time=  Date.now()
+    try{
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+           'Content-Type': 'application/json',
+          "Accept":"application/json" 
+        },
+        body:JSON.stringify({  
+          userAddress:address,
+          contractAddress:process.env.REACT_APP_DOXACONTRACT_ADDRESS,
+          amount:data.balance,
+          id:data.id,
+          noOfDays:data.lockingPeriod,
+          timestamp:time,
+        })
+      };
+      const response1= await fetch(process.env.REACT_APP_API_URL+'/getsignature', requestOptions)
+      const data1 = await response1.json();
+      var signaturelkn= data1.result
+      var sigtuplelkn =[address,process.env.REACT_APP_DOXACONTRACT_ADDRESS,data.balance,data.id,data.lockingPeriod,time,signaturelkn]
+   //   console.log("sigtuplelkn",sigtuplelkn)
+      if(await this.isTimeEnded(record)) {
+        try{ 
+          const exit = await staking.methods.exit(record,sigtuplelkn).send({from: address});
+          console.log(exit)
+        }catch(err){
+        console.log("ERROR: ",err)
+        }
+       
+      }
+      else {
+        console.log("getReward")
+      try{ 
+         const claimReward = await staking.methods.getReward(record,sigtuplelkn).send({from: address});
+        console.log(claimReward)
+      }
+        catch(err){
+          console.log("Error:",err)
+        }
+      }
+     // console.log("signaturelkn",signaturelkn)
+    }catch(err){
+      console.log(err)
     }
     this.getStakeRecords();
     this.getTokenBalance();
   }
 
-  unstake = async(record) => {
+  unstake = async(record,data) => {
+    console.log("data",data)
     const { web3, staking, address } = this.props.wallet;
-    if(await this.isTimeEnded(record)) {
-      const exit = await staking.methods.exit(record).send({from: address});
-    } else {
-      const unstake = await staking.methods.unstake(record).send({from: address});
-      console.log(unstake);
+    var time =Date.now()
+    try{
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+           'Content-Type': 'application/json',
+          "Accept":"application/json" 
+        },
+        body:JSON.stringify({  
+          userAddress:address,
+          contractAddress:process.env.REACT_APP_DOXACONTRACT_ADDRESS,
+          amount:data.balance,
+          id:data.id,
+          noOfDays:data.lockingPeriod,
+          timestamp:time,
+        })
+      };
+      const response1= await fetch(process.env.REACT_APP_API_URL+'/getsignature', requestOptions)
+      const data1 = await response1.json();
+      var signaturelkn= data1.result
+      var sigtuplelkn =[address,process.env.REACT_APP_DOXACONTRACT_ADDRESS,data.balance,data.id,data.lockingPeriod,time,signaturelkn]
+      if(await this.isTimeEnded(record)) {
+        const exit = await staking.methods.exit(record,sigtuplelkn).send({from: address});
+      } else {
+     //   console.log("sigtuplelkn",sigtuplelkn)
+        try{
+          const unstake = await staking.methods.unstake(record,sigtuplelkn).send({from: address});
+            // console.log(unstake);
+        }catch(err){
+          console.log("Error:",err)
+        }
+      }
+    }catch(err){
+console.log(err)
     }
+    
     this.getStakeRecords();
     this.getTokenBalance();
   }
 
   canUnstake = (data) => {
-    console.log(data.maxTime < (Date.now()/1000));
+   
     return !(data.maxTime < (Date.now()/1000));
   }
 
   isTimeEnded = async(record) => {
     const {web3, staking, address} = this.props.wallet;
     const stakerDetails = await staking.methods.Stakers(address, record).call();
-    console.log(stakerDetails);
+
     
     if(parseInt(stakerDetails.maxTime) <= Math.ceil(Date.now() / 1000)) {
       return true;
@@ -307,14 +400,12 @@ export class Home extends Component {
       <div style={{backgroundColor:"#F5D393"}}>
         <Container fluid className="mainCont">
           <Row>
-
             <Col xl={6} lg={6} md={6} xs={12} className="lhs">
               {/* <h1>AZO STAKING</h1> */}
               <h2>Stake on AZO</h2>
               <p>
                 Earn rewards by staking your AZO to help secure the network. Choose your staking preference and start earning profit with just a few clicks!
               </p>
-
               <button className="btn-btn" onClick={()=>{this.setState({showDiv: !this.state.showDiv})}}>SWAP</button>
               {
                 this.state.showDiv ?
@@ -409,13 +500,11 @@ export class Home extends Component {
                 </>
               }
             </Col>
-            
             <Col xl={6} lg={6} md={6} xs={12} className="rhs">
               <h6 className="text-center">AZO BOUNTY</h6>
               <Row className="stackMain" style={{backgroundColor:"#ffffff"}}>
               
                 <Col md={12} className="stackingCont">
-                  {console.log("data",this.state.stakeRecords)}
                   { 
                   this.state.stakeRecords.length !=0 ?
                   this.state.stakeRecords.map((data, i) => {
@@ -424,11 +513,11 @@ export class Home extends Component {
                         <div className="grid-row " >
                           <div style={{flexDirection:"column"}}>
                             <p style={{float:"left"}}>{data.balance} AZO at <b>{data.apr}% APR </b> for <span>{data.lockingPeriod} days</span>({data.timeleft + 1} left)</p> <br></br> 
-                            <button style={{float:"left"}} className="grid-btn" style={{backgroundColor: !this.canUnstake(data)  ? '#002365' : '#e2e2e2'}} disabled={this.canUnstake(data)} onClick={() => this.unstake(i)}>unstake</button>
+                            <button  className="grid-btn" style={{float:"left",backgroundColor: !this.canUnstake(data)  ? '#002365' : '#e2e2e2'}} disabled={this.canUnstake(data)} onClick={() => this.unstake(i,data)}>unstake</button>
                           </div>
                           <div style={{flexDirection:"column"}}>
                             <p style={{float:"left"}}>Reward :<b>{data.rewardEarned}</b> AZO </p> <br></br>
-                            <button style={{float:"left"}}className="grid-btn" onClick={() => this.claimReward(i)}>claim</button>
+                            <button style={{float:"left"}}className="grid-btn" onClick={() => this.claimReward(i,data)}>claim</button>
                           </div>
                         </div>
                       )
@@ -443,7 +532,7 @@ export class Home extends Component {
                 </Col>
 
                 <Col md={12} className="mobStackCont">
-                {console.log("data",this.state.stakeRecords)}
+           
                   { 
                   this.state.stakeRecords.length !=0 ? 
                   this.state.stakeRecords.map((data, i) => {
@@ -455,8 +544,8 @@ export class Home extends Component {
                         <p style={{float:"left"}}>Reward :<b>{data.rewardEarned}</b> AZO </p>
                       </div> 
                       <div style={{flexDirection:"column",marginTop:"20px"}}>   
-                        <button style={{float:"left"}} className="grid-btn" style={{backgroundColor: !this.canUnstake(data)  ? '#002365' : '#e2e2e2'}} disabled={this.canUnstake(data)} onClick={() => this.unstake(i)}>unstake</button>
-                        <button style={{float:"left"}}className="grid-btn" onClick={() => this.claimReward(i)}>claim</button>
+                        <button className="grid-btn" style={{float:"left",backgroundColor: !this.canUnstake(data)  ? '#002365' : '#e2e2e2'}} disabled={this.canUnstake(data)} onClick={() => this.unstake(i,data)}>unstake</button>
+                        <button style={{float:"left"}}className="grid-btn" onClick={() => this.claimReward(i,data)}>claim</button>
                       </div> 
                       </div>
                  
@@ -538,9 +627,11 @@ export class Home extends Component {
                           type="number"
                           value={this.state.yearsValue}
                           onChange={(e) => {
+                            if(Number(e.target.value)<366){
                             this.setState({ yearsValue: e.target.value }, () => this.calculateReward(this.state.stakeValue));
                             let currentAPR = this.calculateAPR(e.target.value)
                             this.setState({ currentAPR }, this.calculateReward(this.state.stakeValue));
+                            }
                           }}
                         />
                         <span>days</span>
@@ -588,7 +679,7 @@ export class Home extends Component {
 
                     <div className="d-block d-md-flex bottom-btn-cont">
                       {!this.state.isApproved && <button className="btn-btn stake-btn"  onClick={() => this.props.wallet.connected ? this.approval() : alert('Connect to wallet!')}>Approve AZO</button>}
-                      <button className="btn-btn stake-btn" style={{backgroundColor:this.state.isApproved ? '#002365' : '#e2e2e2'}} disabled={!this.state.isApproved} onClick={() => this.state.isApproved ? this.stakeAZO(): alert('Approve tokens before staking!')}>STAKE AZO</button>
+                      <button className="btn-btn stake-btn" style={{backgroundColor:this.state.isApproved ? '#002365' : '#e2e2e2'}} disabled={!this.state.isApproved} onClick={() => this.state.isApproved ? this.stakeAZO(): alert('Approve tokens before staking!')}>STAKE AZO {this.state.stakeloading?<img style={{width:'20px',height:'20px'}} src={buyLoader}></img>:null}</button>
                     </div>
                   </div>
                 </div>
